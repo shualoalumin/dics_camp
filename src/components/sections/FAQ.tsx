@@ -1,37 +1,13 @@
 import React, { useState } from 'react';
 import SectionHeading from '../ui/SectionHeading';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const FAQ: React.FC = () => {
+  const { language, t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   
-  const faqItems: FAQItem[] = [
-    {
-      question: "What makes this camp special compared to other English camps?",
-      answer: "This is the historic first expansion of the WOLBI Jeju English camp to the Daegu-Gyeongsan region. Beyond language learning, our program integrates faith-based education, character development, and spiritual growth in a fully immersive English environment led by native speakers. Students experience transformative community living that impacts their language skills and life perspective."
-    },
-    {
-      question: "How good does my English need to be to join the camp?",
-      answer: "All English levels are welcome! Our program is designed to accommodate students at different proficiency levels. The immersive environment naturally helps improve fluency, and our mentors provide appropriate support based on individual needs. The most important requirement is your willingness to try speaking English and participate actively."
-    },
-    {
-      question: "What is the daily schedule like?",
-      answer: "A typical day includes morning devotions, English language sessions, Bible-based discussions, recreational activities, evening programs with worship, and small group sharing. All activities are conducted in English, providing continuous language practice throughout the day in different contexts."
-    },
-    {
-      question: "What should students bring to the camp?",
-      answer: "Students should bring personal items (toiletries, clothes for 5 days), Bible (English version if possible), notebook, pen, sports clothes, modest swimwear, any medications needed, and a positive attitude! A detailed packing list will be sent after registration."
-    },
-    {
-      question: "Will there be follow-up activities after the camp?",
-      answer: "Yes! We organize reunion events, online community groups, and regular meet-ups to maintain the friendships and momentum built during the camp. Students become part of the broader DICS and WOLBI community with ongoing opportunities for growth."
-    }
-  ];
+  const faqItems = t('items', 'faq');
   
   const toggleQuestion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -41,8 +17,8 @@ const FAQ: React.FC = () => {
     <section className="py-20 bg-gradient-to-b from-gray-50 to-gray-100" id="faq">
       <div className="container mx-auto px-4">
         <SectionHeading
-          title="Frequently Asked Questions"
-          subtitle="Find answers to common questions about the DICS International English Camp."
+          title={t('title', 'faq')}
+          subtitle={t('subtitle', 'faq')}
         />
         
         <div className="max-w-3xl mx-auto mt-12 space-y-4">

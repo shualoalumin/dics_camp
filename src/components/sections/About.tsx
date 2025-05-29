@@ -1,6 +1,7 @@
 import React from 'react';
 import SectionHeading from '../ui/SectionHeading';
 import { GraduationCap, MapPin, Handshake, Users } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AboutCardProps {
   icon: React.ReactNode;
@@ -23,12 +24,14 @@ const AboutCard: React.FC<AboutCardProps> = ({ icon, title, description }) => {
 };
 
 const About: React.FC = () => {
+  const { language, t } = useLanguage();
+
   return (
     <section className="py-20 bg-gradient-to-b from-gray-50 to-gray-100" id="about">
       <div className="container mx-auto px-4">
         <SectionHeading
-          title="About the Camp"
-          subtitle="After years of fruitful partnership and shared vision with WOLBI Jeju, DICS is honored to host its first-ever international christian camp in the Daegu-Gyeongsan region. This camp marks a new beginning — a celebration of faith, language, and mission."
+          title={t('title', 'about')}
+          subtitle={t('subtitle', 'about')}
         />
 
         <div className="flex justify-center items-center gap-8 md:gap-16 my-12">
@@ -38,8 +41,8 @@ const About: React.FC = () => {
               alt="DICS Logo" 
               className="h-24 md:h-32 object-contain mb-4"
             />
-            <h3 className="text-blue-600 font-bold">DICS</h3>
-            <p className="text-sm text-gray-600">Host & Organizer</p>
+            <h3 className="text-blue-600 font-bold">{t('organizations.dics.name', 'about')}</h3>
+            <p className="text-sm text-gray-600">{t('organizations.dics.role', 'about')}</p>
           </div>
 
           <div className="relative">
@@ -47,7 +50,7 @@ const About: React.FC = () => {
               <Handshake size={32} className="text-blue-500" />
             </div>
             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm font-medium text-blue-600">
-              Partnership
+              {t('organizations.partnership', 'about')}
             </div>
           </div>
 
@@ -57,52 +60,40 @@ const About: React.FC = () => {
               alt="WOLBI Logo" 
               className="h-24 md:h-32 object-contain mb-4"
             />
-            <h3 className="text-blue-600 font-bold">WOLBI Jeju</h3>
-            <p className="text-sm text-gray-600">Program Partner</p>
+            <h3 className="text-blue-600 font-bold">{t('organizations.wolbi.name', 'about')}</h3>
+            <p className="text-sm text-gray-600">{t('organizations.wolbi.role', 'about')}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-          {[
-            {
-              icon: <GraduationCap size={24} />,
-              title: "5 Days of Impact",
-              description: "Full English-immersion experience in a supportive Christian environment. Live, learn, and grow together in faith and language."
-            },
-            {
-              icon: <MapPin size={24} />,
-              title: "DICS Campus",
-              description: "Beautiful Daegu-Gyeongsan campus providing the perfect setting for spiritual growth and international learning."
-            },
-            {
-              icon: <Handshake size={24} />,
-              title: "WOLBI Partnership",
-              description: "Bringing the internationally recognized WOLBI Jeju experience to your local community for the very first time."
-            },
-            {
-              icon: <Users size={24} />,
-              title: "Target Students",
-              description: "Designed for students born 2011 or earlier (grades 8-12), ready to embrace faith and English fluency."
-            }
-          ].map((card, index) => (
-            <AboutCard
-              key={index}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-            />
-          ))}
+          <AboutCard
+            icon={<GraduationCap size={24} />}
+            title={t('features.duration.title', 'about')}
+            description={t('features.duration.description', 'about')}
+          />
+          <AboutCard
+            icon={<MapPin size={24} />}
+            title={t('features.location.title', 'about')}
+            description={t('features.location.description', 'about')}
+          />
+          <AboutCard
+            icon={<Handshake size={24} />}
+            title={t('features.partnership.title', 'about')}
+            description={t('features.partnership.description', 'about')}
+          />
+          <AboutCard
+            icon={<Users size={24} />}
+            title={t('features.students.title', 'about')}
+            description={t('features.students.description', 'about')}
+          />
         </div>
 
         <div className="mt-16 bg-blue-500/5 rounded-2xl p-8 text-center">
           <h3 className="text-2xl font-bold text-blue-600 mb-4">
-            A Unique Collaboration
+            {t('collaboration.title', 'about')}
           </h3>
           <p className="text-gray-700 max-w-3xl mx-auto">
-            DICS and WOLBI Jeju join forces to bring you an unparalleled 
-            English camp experience. <br/>This collaboration combines DICS's educational excellence with 
-            WOLBI's proven English immersion program, creating a transformative environment where 
-            faith meets language learning.
+            {t('collaboration.description', 'about')}
           </p>
         </div>
       </div>

@@ -10,7 +10,7 @@ const FooterCTA: React.FC = () => {
         
         <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
           English, faith, and transformation await. Be part of history <br/>as we launch the 
-          first DICS International English Camp.
+          first English Christian Camp in our region.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

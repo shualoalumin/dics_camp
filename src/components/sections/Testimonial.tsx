@@ -1,40 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
-
-interface Testimonial {
-  quote: string;
-  author: string;
-  role?: string;
-}
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Testimonial: React.FC = () => {
-  const testimonials: Testimonial[] = [
-    {
-      quote: "The WOLBI Jeju camp completely transformed my life. I made global friends, discovered my calling, and met God in such a powerful way. The English immersion helped me gain confidence, but the spiritual growth was life-changing.",
-      author: "Sarah K.",
-      role: "WOLBI Jeju Alumni"
-    },
-    {
-      quote: "Coming to the camp as a shy student with limited English, I never imagined how much I would grow. The counselors created such a welcoming environment that I found myself speaking English naturally within days!",
-      author: "Min-ho J.",
-      role: "WOLBI Jeju Alumni"
-    },
-    {
-      quote: "My daughter returned from WOLBI Jeju with not just improved English, but with purpose and confidence. The spiritual foundation they provided has helped her navigate high school with strong values and clear direction.",
-      author: "Mrs. Park",
-      role: "Parent of WOLBI Student"
-    },
-    {
-      quote: "The combination of faith and English learning at WOLBI created an incredible atmosphere. I not only improved my language skills but also deepened my relationship with God. It was truly a life-changing experience.",
-      author: "Ji-eun L.",
-      role: "WOLBI Jeju Alumni"
-    },
-    {
-      quote: "As an international counselor at WOLBI Jeju, I witnessed countless students transform over just a few days. The program's unique blend of spiritual growth and language immersion creates lasting impact.",
-      author: "David M.",
-      role: "Former WOLBI Counselor"
-    }
-  ];
+  const { language, t } = useLanguage();
+  const testimonials = t('items', 'testimonial');
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -71,7 +41,7 @@ const Testimonial: React.FC = () => {
     <section className="py-20 bg-gradient-to-r from-yellow-400 to-yellow-600">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-900">
-          Testimonials
+          {t('title', 'testimonial')}
         </h2>
         
         <div className="relative max-w-4xl mx-auto">

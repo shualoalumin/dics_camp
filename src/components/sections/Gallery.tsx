@@ -13,49 +13,62 @@ const Gallery: React.FC = () => {
   
   const galleryImages: GalleryImage[] = [
     {
-      src: "/images/gallery/gallery1.JPG",
+      src: "/images/gallery/gallery1.webp",
       alt: "WOLBI Jeju camp activity",
       caption: "Interactive English learning sessions"
     },
     {
-      src: "/images/gallery/gallery2.JPG",
+      src: "/images/gallery/gallery2.webp",
       alt: "WOLBI Jeju students",
       caption: "Building global friendships"
     },
     {
-      src: "/images/gallery/gallery3.JPG",
+      src: "/images/gallery/gallery3.webp",
       alt: "Camp activities",
       caption: "Engaging in meaningful discussions"
     },
     {
-      src: "/images/gallery/gallery4.JPG",
+      src: "/images/gallery/gallery4.webp",
       alt: "Student activities",
       caption: "Growing together in faith and language"
     },
     {
-      src: "/images/gallery/gallery5.JPG",
+      src: "/images/gallery/gallery5.webp",
       alt: "Group activities",
       caption: "Creating lasting memories"
     },
     {
-      src: "/images/gallery/gallery6.JPG",
+      src: "/images/gallery/gallery6.webp",
       alt: "Camp experience",
       caption: "Learning through experience"
     },
     {
-      src: "/images/gallery/gallery7.JPG",
+      src: "/images/gallery/gallery7.webp",
       alt: "Student interaction",
       caption: "Fostering meaningful connections"
     },
     {
-      src: "/images/gallery/gallery8.JPG",
+      src: "/images/gallery/gallery8.webp",
       alt: "Camp community",
       caption: "Building a supportive community"
     },
     {
-      src: "/images/gallery/gallery9.JPG",
+      src: "/images/gallery/gallery9.webp",
       alt: "Learning moments",
       caption: "Capturing transformative moments"
+    }
+  ];
+
+  const videos = [
+    {
+      title: "WOLBI Camp 2024 Recap",
+      thumbnail: "https://img.youtube.com/vi/SYoF3LEBEiM/maxresdefault.jpg",
+      url: "https://youtu.be/SYoF3LEBEiM?si=57dvj58xGvBEv-41"
+    },
+    {
+      title: "WOLBI Camp 2023 Recap",
+      thumbnail: "https://img.youtube.com/vi/MYkxJfmRWGQ/maxresdefault.jpg",
+      url: "https://youtu.be/MYkxJfmRWGQ?si=74JxH9cO-f8rSJj8"
     }
   ];
   
@@ -82,19 +95,6 @@ const Gallery: React.FC = () => {
     }
   };
 
-  const videos = [
-    {
-      title: "WOLBI Camp 2024 Recap",
-      thumbnail: "https://img.youtube.com/vi/SYoF3LEBEiM/maxresdefault.jpg",
-      url: "https://youtu.be/SYoF3LEBEiM?si=57dvj58xGvBEv-41"
-    },
-    {
-      title: "WOLBI Camp 2023 Recap",
-      thumbnail: "https://img.youtube.com/vi/MYkxJfmRWGQ/maxresdefault.jpg",
-      url: "https://youtu.be/MYkxJfmRWGQ?si=74JxH9cO-f8rSJj8"
-    }
-  ];
-
   return (
     <section 
       className="py-20 bg-white" 
@@ -107,8 +107,39 @@ const Gallery: React.FC = () => {
           title="Camp Gallery"
           subtitle={<>Experience the transformative moments from previous WOLBI programs.<br/>Your journey of faith and language awaits.</>}
         />
+
+        {/* Camp Recap Videos Section - Moved to top */}
+        <div className="mt-12 mb-16">
+          <h3 className="text-2xl font-bold text-center mb-8">Camp Recap Videos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {videos.map((video, index) => (
+              <a
+                key={index}
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative group block aspect-video rounded-xl overflow-hidden shadow-lg"
+              >
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-white/90 rounded-full p-4">
+                    <Play className="w-12 h-12 text-blue-600" />
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h4 className="text-white font-semibold text-lg">{video.title}</h4>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-12">
+        {/* Gallery Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {galleryImages.map((image, index) => (
             <div 
               key={index}
@@ -167,36 +198,6 @@ const Gallery: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Camp Recap Videos Section */}
-        <div className="mt-20">
-          <h3 className="text-2xl font-bold text-center mb-8">Camp Recap Videos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {videos.map((video, index) => (
-              <a
-                key={index}
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative group block aspect-video rounded-xl overflow-hidden shadow-lg"
-              >
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-white/90 rounded-full p-4">
-                    <Play className="w-12 h-12 text-blue-600" />
-                  </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <h4 className="text-white font-semibold text-lg">{video.title}</h4>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

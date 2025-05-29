@@ -1,6 +1,7 @@
 import React from 'react';
 import SectionHeading from '../ui/SectionHeading';
 import { MessageSquare, Heart, Flag, Home, Target, Globe, Users, Coffee, Utensils, Moon } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HighlightCardProps {
   icon: React.ReactNode;
@@ -21,51 +22,53 @@ const HighlightCard: React.FC<HighlightCardProps> = ({ icon, title, description 
 };
 
 const Highlights: React.FC = () => {
+  const { t } = useLanguage();
+
   const highlights = [
     {
       icon: <MessageSquare size={32} />,
-      title: "24/7 English Immersion",
-      description: "Learn with native-speaking mentors in a completely English environment, building confidence through natural conversation and daily practice."
+      title: t('features.immersion.title', 'highlights'),
+      description: t('features.immersion.description', 'highlights')
     },
     {
       icon: <Heart size={32} />,
-      title: "Dynamic Worship",
-      description: "Experience powerful spiritual moments through contemporary worship, Bible study, and life-changing messages that speak to your heart."
+      title: t('features.worship.title', 'highlights'),
+      description: t('features.worship.description', 'highlights')
     },
     {
       icon: <Flag size={32} />,
-      title: "Expert Program Leaders",
-      description: "Benefit from WOLBI's unmatched expertise in creating diverse, engaging activities that naturally enhance language learning through meaningful interactions."
+      title: t('features.leaders.title', 'highlights'),
+      description: t('features.leaders.description', 'highlights')
     },
     {
       icon: <Home size={32} />,
-      title: "Dormitory Life",
-      description: "Build lasting friendships through shared living experiences, evening activities, and meaningful conversations with roommates from diverse backgrounds."
+      title: t('features.dormitory.title', 'highlights'),
+      description: t('features.dormitory.description', 'highlights')
     },
     {
       icon: <Moon size={32} />,
-      title: "24/7 Counselor Support",
-      description: "Experience personal growth with dedicated counselors who live alongside campers, providing guidance, spiritual mentoring, and creating a safe, nurturing environment."
+      title: t('features.counselors.title', 'highlights'),
+      description: t('features.counselors.description', 'highlights')
     },
     {
       icon: <Globe size={32} />,
-      title: "Global Perspective",
-      description: "Broaden your worldview by connecting with international mentors and fellow students, preparing you for future global opportunities."
+      title: t('features.perspective.title', 'highlights'),
+      description: t('features.perspective.description', 'highlights')
     },
     {
       icon: <Coffee size={32} />,
-      title: "Cultural Exchange",
-      description: "Engage in authentic cultural experiences with international staff, fostering natural English conversation and global understanding."
+      title: t('features.exchange.title', 'highlights'),
+      description: t('features.exchange.description', 'highlights')
     },
     {
       icon: <Utensils size={32} />,
-      title: "International Cuisine",
-      description: "Enjoy diverse meals prepared by Western and Asian chefs, supported by mission-minded staff dedicated to providing excellent dining experiences."
+      title: t('features.cuisine.title', 'highlights'),
+      description: t('features.cuisine.description', 'highlights')
     },
     {
       icon: <Users size={32} />,
-      title: "Community Living",
-      description: "Experience transformative community life where faith, friendship, and English learning naturally blend through shared daily activities and meaningful interactions."
+      title: t('features.community.title', 'highlights'),
+      description: t('features.community.description', 'highlights')
     }
   ];
 
@@ -73,11 +76,8 @@ const Highlights: React.FC = () => {
     <section className="py-20 bg-white" id="highlights">
       <div className="container mx-auto px-4">
         <SectionHeading
-          title="Camp Highlights"
-          subtitle={<>
-            Experience a transformative program that combines English language immersion<br />
-            with spiritual growth in a supportive community environment.
-          </>}
+          title={t('title', 'highlights')}
+          subtitle={t('subtitle', 'highlights')}
         />
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">

@@ -10,21 +10,24 @@ import Testimonial from './components/sections/Testimonial';
 import Gallery from './components/sections/Gallery';
 import FAQ from './components/sections/FAQ';
 import FooterCTA from './components/sections/FooterCTA';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 function App() {
   return (
-    <Layout>
-      <Hero />
-      <About />
-      <Special />
-      <Highlights />
-      <Schedule />
-      <Gallery />
-      <Registration />
-      <Testimonial />
-      <FAQ />
-      <FooterCTA />
-    </Layout>
+    <LanguageProvider>
+      <Layout>
+        <Hero />
+        <About />
+        <Special />
+        <Highlights />
+        <Schedule />
+        <Gallery />
+        <Registration />
+        <Testimonial />
+        <FAQ />
+        <FooterCTA />
+      </Layout>
+    </LanguageProvider>
   );
 }
 
