@@ -46,7 +46,7 @@ export const translations = {
   },
   hero: {
     en: {
-      badge: "🔥 2005 Summer 1st Launch ",
+      badge: "🔥 2025 Summer 1st Launch ",
       title: {
         line1: "From Jeju to",
         line2: "Daegu-Gyeongsan",
