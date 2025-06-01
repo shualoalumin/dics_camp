@@ -810,7 +810,7 @@ export const translations = {
         {
           question: "What should students bring to the camp?",
           answer:
-            "Students should bring personal items (toiletries, clothes for 5 days), Bible (English version if possible), notebook, pen, sports clothes, any medications needed, and a positive attitude! A detailed packing list will be sent after registration.",
+            "Students should bring personal items (toiletries, clothes for 5 days), Bible (English version if possible), notebook, pen, sports clothes, modest swimwear, any medications needed, and a positive attitude! A detailed packing list will be sent after registration.",
         },
         {
           question: "Will there be follow-up activities after the camp?",
@@ -843,7 +843,7 @@ export const translations = {
         {
           question: "학생들은 무엇을 준비해야 하나요?",
           answer:
-            "개인용품(세면도구, 5일치 의류), 성경(가능하면 영어 버전), 노트, 필기구, 운동복, 필요한 약품, 그리고 긍정적인 태도가 필요합니다! 자세한 준비물 목록은 등록 후 발송됩니다.",
+            "개인용품(세면도구, 5일치 의류), 성경(가능하면 영어 버전), 노트, 필기구, 운동복, 단정한 수영복, 필요한 약품, 그리고 긍정적인 태도가 필요합니다! 자세한 준비물 목록은 등록 후 발송됩니다.",
         },
         {
           question: "캠프 이후에도 후속 활동이 있나요?",
