@@ -2,11 +2,14 @@ import type { Language } from "./types";
 
 export type { Language };
 
-// Helper function to get nested values of any type
-export function getNestedValue(obj: Record<string, any>, path: string): any {
-  const value = path.split(".").reduce((acc, part) => {
-    if (acc && typeof acc === "object") {
-      return acc[part];
+// Helper function to get nested values
+export function getNestedValue(
+  obj: Record<string, unknown>,
+  path: string
+): unknown {
+  const value = path.split(".").reduce((acc: unknown, part: string) => {
+    if (acc && typeof acc === "object" && acc !== null && part in acc) {
+      return (acc as Record<string, unknown>)[part];
     }
     return undefined;
   }, obj);
