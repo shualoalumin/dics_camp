@@ -452,10 +452,9 @@ export const translations = {
         refund: {
           title: "Refund Policy",
           items: [
-            "15 days before camp: Full refund (excluding 5,000 KRW bank transfer fee)",
+            "15 days before camp: Full refund (excluding bank transfer fee)",
             "7-14 days before camp: 50% refund",
             "Less than 7 days before camp: No refund",
-            "Medical emergency with doctor's note (within 3 days): 60% refund",
             "No refund for personal reasons or violation of camp rules",
           ],
         },
@@ -598,10 +597,9 @@ export const translations = {
         refund: {
           title: "환불 정책",
           items: [
-            "캠프 15일 전: 전액 환불 (송금 수수료 5,000원 제외)",
+            "캠프 15일 전: 전액 환불 (송금 수수료 제외)",
             "캠프 7-14일 전: 50% 환불",
             "캠프 7일 이내: 환불 불가",
-            "의료적 응급상황 (의사 소견서 제출, 3일 이내): 60% 환불",
             "개인 사유 또는 캠프 규정 위반으로 인한 퇴소 시 환불 불가",
           ],
         },
