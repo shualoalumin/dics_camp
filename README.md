@@ -1,1 +1,1 @@
-dics_camp
+dicscamp.org
