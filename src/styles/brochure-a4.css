@@ -1,0 +1,81 @@
+/* src/styles/brochure-a4.css */
+
+.brochure-wrapper {
+  max-width: 90vw;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.spread {
+  width: 297mm;
+  height: 210mm;
+  display: flex;
+  box-sizing: border-box;
+  border: 1px solid #ccc; /* 화면 검토용 */
+}
+
+.panel {
+  width: 148.5mm;
+  height: 210mm;
+  box-sizing: border-box;
+  /* 패딩/여백은 필요에 따라 추가 */
+}
+
+/* "here" 섹션의 배경을 복사해 붙인 클래스 */
+.bg-hero-here {
+  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* 인쇄 전용 설정 */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .spread,
+  .spread * {
+    visibility: visible;
+  }
+  .spread {
+    position: absolute;
+    top: 0;
+    left: 0;
+    page-break-after: always;
+  }
+}
+
+/* 디버깅용: 뒷면 spread 숨기기 */
+@media screen {
+  .spread-back {
+    display: none;
+  }
+  .spread-front {
+    margin: 0 auto;
+  }
+  .brochure-wrapper {
+    transform: scale(0.5);
+    transform-origin: top center;
+  }
+}
+
+.mobile-preview {
+  width: 360px;
+  height: 640px;
+  overflow: hidden;
+  border: 1px solid #666;
+  margin: 20px auto;
+}
+.mobile-preview .panel {
+  width: 360px;
+  height: 640px;
+  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+  background-size: cover;
+  background-position: center;
+}
