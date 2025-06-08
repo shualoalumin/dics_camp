@@ -20,9 +20,9 @@ function App() {
         <Special />
         <Highlights />
         <Schedule />
+        <Gallery />
         <Registration />
         <Testimonial />
-        <Gallery />
         <FAQ />
         <FooterCTA />
       </Layout>
