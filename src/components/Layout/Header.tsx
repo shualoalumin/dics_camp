@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header: React.FC = () => {
@@ -74,7 +74,7 @@ const Header: React.FC = () => {
         <div className="container mx-auto px-4 flex justify-between items-center">
           {/* Mobile Menu Button - Left */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 flex items-center justify-center"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -92,11 +92,11 @@ const Header: React.FC = () => {
           </button>
 
           {/* Title - Center */}
-          <div className="flex-1 text-center md:text-left">
+          <div className="flex-1 text-center md:text-left flex items-center md:block">
             <h1
               className={`font-bold text-lg md:text-2xl ${
                 isScrolled ? "text-blue-500" : "text-white"
-              }`}
+              } mx-auto md:mx-0`}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               style={{ cursor: "pointer" }}
             >
@@ -104,22 +104,26 @@ const Header: React.FC = () => {
             </h1>
           </div>
 
-          {/* Language Toggle - Right */}
+          {/* Mobile Language Toggle - Right */}
           <button
             onClick={() => setLanguage(language === "en" ? "ko" : "en")}
-            className={`md:hidden p-2 rounded-full transition-colors ${
-              isScrolled
-                ? "text-gray-600 hover:bg-gray-100"
-                : "text-white hover:bg-white/10"
-            }`}
+            className="md:hidden p-2 rounded-full transition-colors hover:bg-white/10 flex items-center justify-center"
             aria-label="Toggle language"
           >
-            <Globe size={20} />
+            <span
+              className={`fi ${
+                language === "en" ? "fi-kr" : "fi-us"
+              } flag-icon-circular flag-icon-small`}
+              style={{
+                display: "inline-block",
+                filter: isScrolled ? "none" : "brightness(1.2) contrast(1.1)",
+              }}
+            ></span>
           </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center">
-            <ul className="flex space-x-8">
+            <ul className="flex space-x-8 items-center">
               {menuItems.map((item) => (
                 <li key={item.label}>
                   <a
@@ -137,27 +141,44 @@ const Header: React.FC = () => {
             </ul>
 
             {/* Desktop Language Toggle */}
-            <div
-              className={`flex items-center ml-12 space-x-3 ${
-                isScrolled ? "text-gray-700" : "text-white"
-              }`}
-            >
+            <div className="flex items-center ml-12 space-x-3">
               <button
-                className={`font-medium transition-colors ${
-                  language === "en" ? "text-yellow-400" : ""
+                className={`transition-all duration-200 hover:scale-110 flex items-center justify-center ${
+                  language === "en"
+                    ? "opacity-100"
+                    : "opacity-50 hover:opacity-75"
                 }`}
                 onClick={() => setLanguage("en")}
+                aria-label="Set language to English"
               >
-                EN
+                <span
+                  className="fi fi-us flag-icon-circular"
+                  style={{
+                    display: "inline-block",
+                    filter: isScrolled
+                      ? "none"
+                      : "brightness(1.2) contrast(1.1)",
+                  }}
+                ></span>
               </button>
-              <span>|</span>
               <button
-                className={`font-medium transition-colors ${
-                  language === "ko" ? "text-yellow-400" : ""
+                className={`transition-all duration-200 hover:scale-110 flex items-center justify-center ${
+                  language === "ko"
+                    ? "opacity-100"
+                    : "opacity-50 hover:opacity-75"
                 }`}
                 onClick={() => setLanguage("ko")}
+                aria-label="Set language to Korean"
               >
-                KO
+                <span
+                  className="fi fi-kr flag-icon-circular"
+                  style={{
+                    display: "inline-block",
+                    filter: isScrolled
+                      ? "none"
+                      : "brightness(1.2) contrast(1.1)",
+                  }}
+                ></span>
               </button>
             </div>
           </nav>

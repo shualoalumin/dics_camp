@@ -6,7 +6,7 @@
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
     @apply font-sans text-gray-800 overflow-x-hidden min-h-screen;
   }
@@ -16,46 +16,107 @@
   }
 }
 
+@layer components {
+  /* 원형 국기 아이콘 스타일 */
+  .flag-icon-circular {
+    @apply inline-block rounded-full overflow-hidden shadow-sm;
+    width: 28px;
+    height: 28px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+  }
+
+  .flag-icon-circular.flag-icon-small {
+    width: 20px;
+    height: 20px;
+  }
+
+  .flag-icon-circular.flag-icon-large {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* flag-icons 라이브러리와 호환성을 위한 추가 스타일 */
+  .fi.flag-icon-circular {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: inline-block;
+  }
+
+  /* 한국 국기에만 미묘한 경계선 추가 (흰색 배경에서 보이도록) */
+  .fi-kr.flag-icon-circular {
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
 @layer utilities {
   .animate-float {
     animation: float 20s ease-in-out infinite;
   }
-  
+
   .animate-float-delay {
     animation: float 15s ease-in-out 2s infinite;
   }
-  
+
   .animate-fadeIn {
     animation: fadeIn 1s ease-out;
   }
-  
+
   .animate-pulse {
     animation: pulse 2s infinite;
   }
-  
+
   .animate-scrollDown {
     animation: scrollDown 2s ease-in-out infinite;
   }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes scrollDown {
-  0%, 100% { transform: translateY(0); opacity: 0.8; }
-  50% { transform: translateY(6px); opacity: 0.3; }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.3;
+  }
 }
 
 .slide-up {
