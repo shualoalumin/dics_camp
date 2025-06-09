@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { v4 as uuid } from "uuid";
 import SectionHeading from "../ui/SectionHeading";
 import {
   Calendar,
@@ -53,6 +54,42 @@ interface GuideSectionProps {
   onToggle: () => void;
 }
 
+interface TossPayments {
+  requestPayment(
+    paymentType: string,
+    paymentInfo: {
+      amount: number;
+      orderId: string;
+      orderName: string;
+      customerName: string;
+      flowMode: "DEFAULT";
+      successUrl: string;
+      failUrl: string;
+    }
+  ): void;
+}
+
+interface DaumPostcodeData {
+  address: string;
+  buildingName: string;
+  zonecode: string;
+}
+
+interface DaumPostcode {
+  new (options: { oncomplete: (data: DaumPostcodeData) => void }): {
+    open: () => void;
+  };
+}
+
+declare global {
+  interface Window {
+    TossPayments: (clientKey: string) => TossPayments;
+    daum: {
+      Postcode: DaumPostcode;
+    };
+  }
+}
+
 const RegistrationItem: React.FC<RegistrationItemProps> = ({
   icon,
   title,
@@ -90,7 +127,7 @@ const GuidelineSection: React.FC<GuideSectionProps> = ({
 };
 
 const Registration: React.FC = () => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const formRef = useRef<HTMLDivElement>(null);
 
   const initialFormData: FormData = {
@@ -165,6 +202,9 @@ const Registration: React.FC = () => {
     }
   };
 
+  // 결제 시작 시 타임아웃 설정
+  const PAYMENT_TIMEOUT = 10 * 60 * 1000; // 10분
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
@@ -174,16 +214,51 @@ const Registration: React.FC = () => {
       return;
     }
 
+    const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+
+    if (!clientKey || !supabaseUrl) {
+      const errorMessage =
+        "결제 연동에 필요한 환경변수가 설정되지 않았습니다. (.env.local 파일에 VITE_TOSS_CLIENT_KEY, VITE_SUPABASE_URL를 확인해주세요.)";
+      setSubmitError(errorMessage);
+      console.error(errorMessage);
+      return;
+    }
+
+    if (typeof window.TossPayments !== "function") {
+      setSubmitError(
+        "결제 모듈을 로딩하고 있습니다. 잠시 후 다시 시도해주세요."
+      );
+      return;
+    }
+
     try {
       const birthDate = `${formData.birthYear}-${formData.birthMonth.padStart(
         2,
         "0"
       )}-${formData.birthDay.padStart(2, "0")}`;
 
-      const { data, error } = await supabase
+      const orderId = `registration-${uuid()}`;
+      const amount = parseInt(import.meta.env.VITE_CAMP_FEE || "470000", 10);
+
+      const { data: existingOrder } = await supabase
+        .from("registrations")
+        .select("status")
+        .eq("order_id", orderId)
+        .single();
+
+      if (existingOrder && existingOrder.status === "paid") {
+        setSubmitError("이미 결제가 완료된 주문입니다.");
+        return;
+      }
+
+      const { error } = await supabase
         .from("registrations")
         .insert([
           {
+            order_id: orderId,
+            amount: amount,
             student_name: formData.studentName,
             student_name_english: formData.studentNameEnglish,
             student_phone: formData.studentPhone,
@@ -204,18 +279,54 @@ const Registration: React.FC = () => {
 
       if (error) {
         console.error("Error submitting registration:", error);
-        setSubmitError(`Registration failed: ${error.message}`);
+        setSubmitError(`등록 중 오류가 발생했습니다: ${error.message}`);
         return;
       }
 
-      setFormSubmitted(true);
+      const toss = window.TossPayments(clientKey);
+      const successUrl = new URL(`/functions/v1/confirmPayment`, supabaseUrl);
+      successUrl.searchParams.set("orderId", orderId);
+      successUrl.searchParams.set("amount", String(amount));
 
-      if (formRef.current) {
-        formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      toss.requestPayment("카드", {
+        amount: amount,
+        orderId: orderId,
+        orderName: "DICS 캠프 등록비",
+        customerName: formData.studentName,
+        flowMode: "DEFAULT",
+        successUrl: successUrl.href,
+        failUrl: `${appUrl}/payment/fail`,
+      });
+
+      // 결제 요청 후 타임아웃 설정
+      const timeoutId = setTimeout(async () => {
+        try {
+          await supabase
+            .from("registrations")
+            .update({
+              status: "expired",
+              payment_status: "expired",
+            })
+            .eq("order_id", orderId)
+            .eq("status", "pending");
+
+          console.log(`Payment timeout for orderId: ${orderId}`);
+        } catch (error) {
+          console.error("Timeout update failed:", error);
+        }
+      }, PAYMENT_TIMEOUT);
+
+      // 결제 완료 시 타임아웃 취소
+      window.addEventListener("beforeunload", () => {
+        clearTimeout(timeoutId);
+      });
     } catch (error) {
       console.error("Error:", error);
-      setSubmitError("An unexpected error occurred. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다. 다시 시도해주세요.";
+      setSubmitError(errorMessage);
     }
   };
 
@@ -227,19 +338,33 @@ const Registration: React.FC = () => {
   };
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src =
-      "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
-    script.async = true;
-    document.head.appendChild(script);
+    const daumScript = document.createElement("script");
+    daumScript.src =
+      "//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    daumScript.async = true;
+    document.head.appendChild(daumScript);
+
+    const tossScript = document.createElement("script");
+    tossScript.src = "https://js.tosspayments.com/v1";
+    tossScript.async = true;
+    document.head.appendChild(tossScript);
+
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
+      if (document.head.contains(daumScript)) {
+        document.head.removeChild(daumScript);
+      }
+      if (document.head.contains(tossScript)) {
+        document.head.removeChild(tossScript);
       }
     };
   }, []);
 
   const openAddressSearch = () => {
+    if (!window.daum || !window.daum.Postcode) {
+      alert("주소 검색 모듈을 로딩 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
     const isBoltPreview = window.location.hostname.includes("stackblitz.io");
 
     if (isBoltPreview) {
@@ -250,13 +375,9 @@ const Registration: React.FC = () => {
     }
 
     new window.daum.Postcode({
-      oncomplete: function (data: any) {
-        let fullAddress = data.address;
-        let extraAddress = "";
-
-        if (data.buildingName !== "") {
-          extraAddress = ` (${data.buildingName})`;
-        }
+      oncomplete: (data: DaumPostcodeData) => {
+        const fullAddress = data.address;
+        const extraAddress = data.buildingName ? ` (${data.buildingName})` : "";
 
         setAddressData((prev) => ({
           ...prev,
@@ -274,23 +395,23 @@ const Registration: React.FC = () => {
   const registrationItems = [
     {
       icon: <Calendar size={24} />,
-      title: t("info.date.title", "registration"),
-      value: t("info.date.value", "registration"),
+      title: t("info.date.title", "registration") as string,
+      value: t("info.date.value", "registration") as string,
     },
     {
       icon: <Users size={24} />,
-      title: t("info.capacity.title", "registration"),
-      value: t("info.capacity.value", "registration"),
+      title: t("info.capacity.title", "registration") as string,
+      value: t("info.capacity.value", "registration") as string,
     },
     {
       icon: <DollarSign size={24} />,
-      title: t("info.fee.title", "registration"),
-      value: t("info.fee.value", "registration"),
+      title: t("info.fee.title", "registration") as string,
+      value: t("info.fee.value", "registration") as string,
     },
     {
       icon: <Phone size={24} />,
-      title: t("info.contact.title", "registration"),
-      value: t("info.contact.value", "registration"),
+      title: t("info.contact.title", "registration") as string,
+      value: t("info.contact.value", "registration") as string,
     },
   ];
 
@@ -299,6 +420,9 @@ const Registration: React.FC = () => {
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const grades = ["중2", "중3", "고1", "고2", "고3"];
 
+  const refundItems = t("guidelines.refund.items", "registration");
+  const campLifeItems = t("guidelines.campLife.items", "registration");
+
   return (
     <section
       className="py-20 bg-gradient-to-b from-gray-50 to-gray-100"
@@ -306,8 +430,8 @@ const Registration: React.FC = () => {
     >
       <div className="container mx-auto px-4">
         <SectionHeading
-          title={t("title", "registration")}
-          subtitle={t("subtitle", "registration")}
+          title={t("title", "registration") as string}
+          subtitle={t("subtitle", "registration") as string}
         />
 
         <div className="flex items-center justify-center mt-6 mb-8">
@@ -346,35 +470,33 @@ const Registration: React.FC = () => {
 
           <div className="space-y-2">
             <GuidelineSection
-              title={t("guidelines.refund.title", "registration")}
+              title={t("guidelines.refund.title", "registration") as string}
               isOpen={openSections.refund}
               onToggle={() => toggleSection("refund")}
             >
               <ul className="space-y-2 text-gray-600 ml-7 list-disc">
-                {t("guidelines.refund.items", "registration").map(
-                  (item: string, index: number) => (
+                {Array.isArray(refundItems) &&
+                  refundItems.map((item: string, index: number) => (
                     <li key={index}>{item}</li>
-                  )
-                )}
+                  ))}
               </ul>
             </GuidelineSection>
 
             <GuidelineSection
-              title={t("guidelines.campLife.title", "registration")}
+              title={t("guidelines.campLife.title", "registration") as string}
               isOpen={openSections.campLife}
               onToggle={() => toggleSection("campLife")}
             >
               <ul className="space-y-2 text-gray-600 ml-7 list-disc">
-                {t("guidelines.campLife.items", "registration").map(
-                  (item: string, index: number) => (
+                {Array.isArray(campLifeItems) &&
+                  campLifeItems.map((item: string, index: number) => (
                     <li key={index}>{item}</li>
-                  )
-                )}
+                  ))}
               </ul>
             </GuidelineSection>
 
             <GuidelineSection
-              title={t("guidelines.photo.title", "registration")}
+              title={t("guidelines.photo.title", "registration") as string}
               isOpen={openSections.photo}
               onToggle={() => toggleSection("photo")}
             >
@@ -410,6 +532,11 @@ const Registration: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                    {submitError}
+                  </div>
+                )}
                 {/* Student Information Section */}
                 <div className="space-y-4">
                   <h4 className="font-semibold text-white border-b border-gray-400 pb-2">
@@ -434,6 +561,7 @@ const Registration: React.FC = () => {
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       />
                     </div>
+
                     <div>
                       <label
                         htmlFor="studentNameEnglish"
@@ -449,186 +577,153 @@ const Registration: React.FC = () => {
                         id="studentNameEnglish"
                         name="studentNameEnglish"
                         required
-                        placeholder={t(
-                          "form.sections.student.nameEnglish.placeholder",
-                          "registration"
-                        )}
                         value={formData.studentNameEnglish}
                         onChange={handleChange}
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        placeholder="John Doe"
                       />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="studentPhone"
-                      className="block text-sm font-medium text-white mb-1"
-                    >
-                      {t("form.sections.student.phone.label", "registration")}
-                    </label>
-                    <input
-                      type="tel"
-                      id="studentPhone"
-                      name="studentPhone"
-                      required
-                      value={formData.studentPhone}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="studentEmail"
-                      className="block text-sm font-medium text-white mb-1"
-                    >
-                      {t("form.sections.student.email.label", "registration")}
-                    </label>
-                    <input
-                      type="email"
-                      id="studentEmail"
-                      name="studentEmail"
-                      required
-                      value={formData.studentEmail}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-white mb-1">
-                        {t(
-                          "form.sections.student.birthDate.label",
-                          "registration"
-                        )}
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <select
-                          name="birthYear"
-                          required
-                          value={formData.birthYear}
-                          onChange={handleChange}
-                          className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                        >
-                          <option value="">
-                            {t(
-                              "form.sections.student.birthDate.year",
-                              "registration"
-                            )}
-                          </option>
-                          {years.map((year) => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          name="birthMonth"
-                          required
-                          value={formData.birthMonth}
-                          onChange={handleChange}
-                          className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                        >
-                          <option value="">
-                            {t(
-                              "form.sections.student.birthDate.month",
-                              "registration"
-                            )}
-                          </option>
-                          {months.map((month) => (
-                            <option key={month} value={month}>
-                              {month}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          name="birthDay"
-                          required
-                          value={formData.birthDay}
-                          onChange={handleChange}
-                          className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                        >
-                          <option value="">
-                            {t(
-                              "form.sections.student.birthDate.day",
-                              "registration"
-                            )}
-                          </option>
-                          {days.map((day) => (
-                            <option key={day} value={day}>
-                              {day}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-white mb-1">
-                        {t(
-                          "form.sections.student.gender.label",
-                          "registration"
-                        )}
-                      </label>
-                      <div className="flex gap-4 mt-2">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="male"
-                            checked={formData.gender === "male"}
-                            onChange={handleChange}
-                            className="form-radio text-blue-500 bg-white border-gray-300"
-                          />
-                          <span className="ml-2 text-white">
-                            {t(
-                              "form.sections.student.gender.male",
-                              "registration"
-                            )}
-                          </span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="female"
-                            checked={formData.gender === "female"}
-                            onChange={handleChange}
-                            className="form-radio text-blue-500 bg-white border-gray-300"
-                          />
-                          <span className="ml-2 text-white">
-                            {t(
-                              "form.sections.student.gender.female",
-                              "registration"
-                            )}
-                          </span>
-                        </label>
-                      </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
-                        htmlFor="school"
+                        htmlFor="studentPhone"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        {t("form.sections.student.phone.label", "registration")}
+                      </label>
+                      <input
+                        type="tel"
+                        id="studentPhone"
+                        name="studentPhone"
+                        required
+                        value={formData.studentPhone}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        placeholder="010-0000-0000"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="studentEmail"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        {t("form.sections.student.email.label", "registration")}
+                      </label>
+                      <input
+                        type="email"
+                        id="studentEmail"
+                        name="studentEmail"
+                        required
+                        value={formData.studentEmail}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        placeholder="student@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label
+                        htmlFor="birthYear"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        {t("form.sections.student.birth.year", "registration")}
+                      </label>
+                      <select
+                        id="birthYear"
+                        name="birthYear"
+                        required
+                        value={formData.birthYear}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      >
+                        <option value="">년도</option>
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="birthMonth"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        {t("form.sections.student.birth.month", "registration")}
+                      </label>
+                      <select
+                        id="birthMonth"
+                        name="birthMonth"
+                        required
+                        value={formData.birthMonth}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      >
+                        <option value="">월</option>
+                        {months.map((month) => (
+                          <option key={month} value={month}>
+                            {month}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="birthDay"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        {t("form.sections.student.birth.day", "registration")}
+                      </label>
+                      <select
+                        id="birthDay"
+                        name="birthDay"
+                        required
+                        value={formData.birthDay}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      >
+                        <option value="">일</option>
+                        {days.map((day) => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        htmlFor="gender"
                         className="block text-sm font-medium text-white mb-1"
                       >
                         {t(
-                          "form.sections.student.school.label",
+                          "form.sections.student.gender.label",
                           "registration"
                         )}
                       </label>
-                      <input
-                        type="text"
-                        id="school"
-                        name="school"
+                      <select
+                        id="gender"
+                        name="gender"
                         required
-                        value={formData.school}
+                        value={formData.gender}
                         onChange={handleChange}
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                      />
+                      >
+                        <option value="">성별 선택</option>
+                        <option value="male">남자</option>
+                        <option value="female">여자</option>
+                      </select>
                     </div>
+
                     <div>
                       <label
                         htmlFor="grade"
@@ -644,12 +739,7 @@ const Registration: React.FC = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       >
-                        <option value="">
-                          {t(
-                            "form.sections.student.grade.placeholder",
-                            "registration"
-                          )}
-                        </option>
+                        <option value="">학년 선택</option>
                         {grades.map((grade) => (
                           <option key={grade} value={grade}>
                             {grade}
@@ -657,6 +747,24 @@ const Registration: React.FC = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="school"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      {t("form.sections.student.school.label", "registration")}
+                    </label>
+                    <input
+                      type="text"
+                      id="school"
+                      name="school"
+                      required
+                      value={formData.school}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    />
                   </div>
                 </div>
 
@@ -684,6 +792,7 @@ const Registration: React.FC = () => {
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       />
                     </div>
+
                     <div>
                       <label
                         htmlFor="parentPhone"
@@ -699,6 +808,7 @@ const Registration: React.FC = () => {
                         value={formData.parentPhone}
                         onChange={handleChange}
                         className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        placeholder="010-0000-0000"
                       />
                     </div>
                   </div>
@@ -718,78 +828,65 @@ const Registration: React.FC = () => {
                       value={formData.parentEmail}
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      placeholder="parent@example.com"
                     />
                   </div>
                 </div>
 
-                {/* Additional Information Section */}
+                {/* Address Section */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-white border-b border-gray-400 pb-2">
-                    {t("form.sections.additional.title", "registration")}
-                  </h4>
-
                   <div>
-                    <label
-                      htmlFor="address"
-                      className="block text-sm font-medium text-white mb-1"
-                    >
-                      {t(
-                        "form.sections.additional.address.label",
-                        "registration"
-                      )}
+                    <label className="block text-sm font-medium text-white mb-1">
+                      {t("form.sections.address.label", "registration")}
                     </label>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          id="address"
-                          name="address"
-                          required
-                          value={addressData.base}
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                          placeholder={t(
-                            "form.sections.additional.address.placeholder",
-                            "registration"
-                          )}
-                          readOnly
-                        />
-                        <button
-                          type="button"
-                          onClick={openAddressSearch}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 whitespace-nowrap"
-                        >
-                          <Search size={16} />
-                          {t(
-                            "form.sections.additional.address.searchButton",
-                            "registration"
-                          )}
-                        </button>
-                      </div>
-                      {addressData.base && (
-                        <input
-                          type="text"
-                          name="addressDetail"
-                          value={addressData.detail}
-                          onChange={handleChange}
-                          placeholder={t(
-                            "form.sections.additional.address.detailPlaceholder",
-                            "registration"
-                          )}
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                        />
-                      )}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={addressData.base}
+                        readOnly
+                        placeholder="주소 검색 버튼을 클릭해주세요"
+                        className="flex-1 px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={openAddressSearch}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
+                      >
+                        <Search size={16} className="mr-1" />
+                        검색
+                      </button>
                     </div>
                   </div>
 
+                  {addressData.base && (
+                    <div>
+                      <label
+                        htmlFor="addressDetail"
+                        className="block text-sm font-medium text-white mb-1"
+                      >
+                        상세주소
+                      </label>
+                      <input
+                        type="text"
+                        id="addressDetail"
+                        name="addressDetail"
+                        value={addressData.detail}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        placeholder="상세주소를 입력해주세요"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Information */}
+                <div className="space-y-4">
                   <div>
                     <label
                       htmlFor="church"
                       className="block text-sm font-medium text-white mb-1"
                     >
-                      {t(
-                        "form.sections.additional.church.label",
-                        "registration"
-                      )}
+                      {t("form.sections.church.label", "registration")}
                     </label>
                     <input
                       type="text"
@@ -798,6 +895,10 @@ const Registration: React.FC = () => {
                       value={formData.church}
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      placeholder={t(
+                        "form.sections.church.placeholder",
+                        "registration"
+                      )}
                     />
                   </div>
 
@@ -806,10 +907,7 @@ const Registration: React.FC = () => {
                       htmlFor="specialNeeds"
                       className="block text-sm font-medium text-white mb-1"
                     >
-                      {t(
-                        "form.sections.additional.specialNeeds.label",
-                        "registration"
-                      )}
+                      {t("form.sections.special.label", "registration")}
                     </label>
                     <textarea
                       id="specialNeeds"
@@ -819,40 +917,35 @@ const Registration: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       placeholder={t(
-                        "form.sections.additional.specialNeeds.placeholder",
+                        "form.sections.special.placeholder",
                         "registration"
                       )}
                     />
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="agreement"
-                      checked={formData.agreement}
-                      onChange={handleChange}
-                      required
-                      className="mt-1 form-checkbox text-blue-500 bg-white border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-white">
-                      {t("form.agreement.text", "registration")}
-                    </span>
+                {/* Agreement */}
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="agreement"
+                    name="agreement"
+                    required
+                    checked={formData.agreement}
+                    onChange={handleChange}
+                    className="mt-1 mr-3"
+                  />
+                  <label htmlFor="agreement" className="text-sm text-white">
+                    {t("form.agreement", "registration")}
                   </label>
                 </div>
 
-                <div className="pt-6">
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 shadow-md"
-                  >
-                    {t("form.submit.button", "registration")}
-                  </button>
-                  <p className="text-xs text-gray-200 mt-2 text-center">
-                    {t("form.submit.note", "registration")}
-                  </p>
-                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                >
+                  {t("form.submit", "registration")}
+                </button>
               </form>
             )}
           </div>
