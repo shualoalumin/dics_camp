@@ -72,10 +72,10 @@ CREATE TABLE IF NOT EXISTS "public"."registrations" (
     "address" "text" NOT NULL,
     "church" "text",
     "special_needs" "text",
-    "created_at" timestamp without time zone,
+    "created_at" timestamp with time zone DEFAULT "timezone"('Asia/Seoul'::"text", "now"()),
     "status" "text" DEFAULT 'unpaid'::"text",
     "payment_status" "text" DEFAULT 'pending'::"text",
-    "paid_at" timestamp without time zone
+    "paid_at" timestamp with time zone
 );
 
 
@@ -85,6 +85,17 @@ ALTER TABLE "public"."registrations" OWNER TO "postgres";
 ALTER TABLE ONLY "public"."registrations"
     ADD CONSTRAINT "registrations_pkey" PRIMARY KEY ("id");
 
+
+
+CREATE POLICY "Allow individual insert access" ON "public"."registrations" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "Allow public read access" ON "public"."registrations" FOR SELECT USING (true);
+
+
+
+ALTER TABLE "public"."registrations" ENABLE ROW LEVEL SECURITY;
 
 
 
