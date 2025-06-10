@@ -1,0 +1,19 @@
+2025-06-09 | f9fe19a | Josh Kim | feat: Integrate React Router for navigation and enhance registration process - Added react-router-dom for routing, updated App component to use Router, and improved registration form with payment handling and validation. Updated .gitignore to include additional environment files.
+2025-06-09 | a259a97 | Josh Kim | chore: Update dependencies and remove obsolete SQL migration files - Upgraded @supabase/supabase-js to 2.50.0, added @tosspayments/payment-widget-sdk and uuid, and removed outdated SQL migration files for created_at and remote schema.
+2025-06-09 | df0956d | Josh Kim | chore: Initial commit for payment integration branch
+2025-06-09 | c59728b | Josh Kim | fix: Correct component placement in App.tsx by removing duplicate Gallery component
+2025-06-09 | 02cdaa0 | Josh Kim | feat: Add address validation and KST timezone for registrations - Add default created_at with KST timezone for registrations table - Add address validation in Registration form - Add required and name attributes to address input field
+2025-06-09 | 92b8109 | Josh Kim | feat: Add flag-icons library and styles for circular flag icons in the header
+2025-06-09 | e2c534c | Josh Kim | refactor: Clean up import statements and reorder components in App.tsx
+2025-06-03 | 81a483e | Josh Kim | refactor: Remove unused Google Sheet Edge Function and related DB trigger
+2025-06-03 | d115161 | Josh Kim | migration history: [20250603011339] => applied
+2025-06-03 | 784ab12 | Josh Kim | supabase mcp server plus cli
+2025-06-02 | 4d3a61f | Josh Kim | 
+2025-06-02 | 7d73f1e | Josh Kim | 
+2025-06-02 | f680d8f | Josh Kim | 
+2025-06-02 | 9eaa718 | Josh Kim | 
+2025-05-29 | 3a55b96 | Josh Kim | main badge
+2025-05-29 | 1b13ef2 | Josh Kim | Update i18n.ts
+2025-05-29 | d79c4b7 | Josh Kim | OG title
+2025-05-29 | c2010bc | Josh Kim | deploy
+2025-05-28 | 7eca5e3 | Josh Kim | initial

@@ -631,7 +631,10 @@ const Registration: React.FC = () => {
                         htmlFor="birthYear"
                         className="block text-sm font-medium text-white mb-1"
                       >
-                        {t("form.sections.student.birth.year", "registration")}
+                        {t(
+                          "form.sections.student.birthDate.year",
+                          "registration"
+                        )}
                       </label>
                       <select
                         id="birthYear"
@@ -655,7 +658,10 @@ const Registration: React.FC = () => {
                         htmlFor="birthMonth"
                         className="block text-sm font-medium text-white mb-1"
                       >
-                        {t("form.sections.student.birth.month", "registration")}
+                        {t(
+                          "form.sections.student.birthDate.month",
+                          "registration"
+                        )}
                       </label>
                       <select
                         id="birthMonth"
@@ -679,7 +685,10 @@ const Registration: React.FC = () => {
                         htmlFor="birthDay"
                         className="block text-sm font-medium text-white mb-1"
                       >
-                        {t("form.sections.student.birth.day", "registration")}
+                        {t(
+                          "form.sections.student.birthDate.day",
+                          "registration"
+                        )}
                       </label>
                       <select
                         id="birthDay"
@@ -837,7 +846,10 @@ const Registration: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-white mb-1">
-                      {t("form.sections.address.label", "registration")}
+                      {t(
+                        "form.sections.additional.address.label",
+                        "registration"
+                      )}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -886,7 +898,10 @@ const Registration: React.FC = () => {
                       htmlFor="church"
                       className="block text-sm font-medium text-white mb-1"
                     >
-                      {t("form.sections.church.label", "registration")}
+                      {t(
+                        "form.sections.additional.church.label",
+                        "registration"
+                      )}
                     </label>
                     <input
                       type="text"
@@ -896,7 +911,7 @@ const Registration: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       placeholder={t(
-                        "form.sections.church.placeholder",
+                        "form.sections.additional.church.placeholder",
                         "registration"
                       )}
                     />
@@ -907,7 +922,10 @@ const Registration: React.FC = () => {
                       htmlFor="specialNeeds"
                       className="block text-sm font-medium text-white mb-1"
                     >
-                      {t("form.sections.special.label", "registration")}
+                      {t(
+                        "form.sections.additional.specialNeeds.label",
+                        "registration"
+                      )}
                     </label>
                     <textarea
                       id="specialNeeds"
@@ -917,7 +935,7 @@ const Registration: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                       placeholder={t(
-                        "form.sections.special.placeholder",
+                        "form.sections.additional.specialNeeds.placeholder",
                         "registration"
                       )}
                     />
@@ -936,7 +954,7 @@ const Registration: React.FC = () => {
                     className="mt-1 mr-3"
                   />
                   <label htmlFor="agreement" className="text-sm text-white">
-                    {t("form.agreement", "registration")}
+                    {t("form.agreement.text", "registration")}
                   </label>
                 </div>
 
@@ -944,7 +962,7 @@ const Registration: React.FC = () => {
                   type="submit"
                   className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
                 >
-                  {t("form.submit", "registration")}
+                  {t("form.submit.button", "registration")}
                 </button>
               </form>
             )}

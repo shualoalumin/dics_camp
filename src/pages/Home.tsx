@@ -1,22 +1,22 @@
 import React from "react";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
-import Program from "@/components/sections/Program";
-import Registration from "@/components/sections/Registration";
-import Faq from "@/components/sections/Faq";
+import Highlights from "@/components/sections/Highlights";
+import Schedule from "@/components/sections/Schedule";
 import Gallery from "@/components/sections/Gallery";
-import Sponsors from "@/components/sections/Sponsors";
+import Registration from "@/components/sections/Registration";
+import FAQ from "@/components/sections/FAQ";
 
 const Home: React.FC = () => {
   return (
     <>
       <Hero />
       <About />
-      <Program />
+      <Highlights />
+      <Schedule />
       <Gallery />
       <Registration />
-      <Faq />
-      <Sponsors />
+      <FAQ />
     </>
   );
 };

@@ -197,7 +197,6 @@ serve(async (req: Request) => {
     const { error: updateError } = await supabase
       .from("registrations")
       .update({
-        paid_at: new Date().toISOString(),
         status: "paid",
         payment_status: "paid", // ✅ 이미 수정됨
       })

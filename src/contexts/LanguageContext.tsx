@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { Language } from '@/lib/i18n';
-import { translations, getNestedValue } from '@/lib/i18n';
+import React, { createContext, useContext, useState } from "react";
+import type { Language } from "@/lib/i18n";
+import { translations, getNestedValue } from "@/lib/i18n";
 
 interface LanguageContextType {
   language: Language;
@@ -8,10 +8,12 @@ interface LanguageContextType {
   t: (key: string, section?: keyof typeof translations) => any;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>("en");
 
   const t = (key: string, section?: keyof typeof translations): any => {
     try {
@@ -24,15 +26,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
       // Try to find the translation in all sections
       for (const sectionKey in translations) {
-        const sectionTranslations = translations[sectionKey as keyof typeof translations][language];
+        const sectionTranslations =
+          translations[sectionKey as keyof typeof translations][language];
         const value = getNestedValue(sectionTranslations, key);
         if (value !== undefined) return value;
       }
 
       // If no translation found in current language, try English
-      if (language !== 'en') {
+      if (language !== "en") {
         for (const sectionKey in translations) {
-          const sectionTranslations = translations[sectionKey as keyof typeof translations]['en'];
+          const sectionTranslations =
+            translations[sectionKey as keyof typeof translations]["en"];
           const value = getNestedValue(sectionTranslations, key);
           if (value !== undefined) return value;
         }
@@ -57,7 +61,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 }
