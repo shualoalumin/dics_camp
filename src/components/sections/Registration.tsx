@@ -219,10 +219,9 @@ const Registration: React.FC = () => {
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 
     if (!clientKey || !supabaseUrl) {
-      const errorMessage =
-        "결제 연동에 필요한 환경변수가 설정되지 않았습니다. (.env.local 파일에 VITE_TOSS_CLIENT_KEY, VITE_SUPABASE_URL를 확인해주세요.)";
+      const errorMessage = "Payment processing is not available at the moment. Please try again later.";
       setSubmitError(errorMessage);
-      console.error(errorMessage);
+      console.error("Missing environment variables for payment processing. Check VITE_TOSS_CLIENT_KEY and VITE_SUPABASE_URL.");
       return;
     }
 
